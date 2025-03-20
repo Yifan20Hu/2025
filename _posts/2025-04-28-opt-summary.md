@@ -1,7 +1,7 @@
 ---
 layout: distill
-title: Think Twice Before Claiming Your Optimization Algorithm Outperformance - Review and Beyond
-description: In this blog, we revisit the convergence analysis of first-order algorithms in minimization and minimax optimization problems. Within the classical oracle model framework, we review the state-of-the-art upper and lower bound results in various settings, aiming to identify gaps in existing research. With the rapid development of applications like machine learning and operation research, we further identify some recent works that revised the classical settings of optimization algorithms study.
+title: Summary of Upper and Lower Complexity of Optimization Algorithms in Minimization, Minimax Problems, and Beyond
+description: In this blog, we summarize the upper and lower complexity bounds of first-order algorithms in minimization and minimax optimization problems. Within the classical oracle model framework, we review the state-of-the-art upper and lower bound results in various settings, aiming to identify gaps in existing research. With the rapid development of applications like machine learning and operation research, we further identify some recent works that revised the classical settings of optimization algorithms study.
 date: 2025-04-28
 future: true
 htmlwidgets: true
@@ -9,7 +9,16 @@ hidden: false
 
 # Anonymize when submitting
 authors:
-  - name: Anonymous
+  - name: Siqi Zhang
+	url: "https://siqi-z.github.io/"
+    affiliations:
+		name: School of Management and Engineering, Nanjing University
+		
+  - name: Yifan Hu
+	url: "https://sites.google.com/view/yifan-hu/"
+    affiliations:
+		name: EPFL and ETH Zurich		
+
 
 # authors:
 #   - name: Albert Einstein
@@ -72,21 +81,22 @@ _styles: >
 
 ## Introduction
 
-In this blog, we review the convergence rate of (stochastic) first-order methods in optimization. 
+In this blog, we review the complexity bounds of (stochastic) first-order methods in optimization. 
 
-Regarding the **problem structure**, we specifically consider *minimization* problems above and *minimax* optimization problems of the following forms.
-
-$$
-\min_{x\in\mathcal{X}}\ f(x).
-$$
+Regarding the **problem structure**, we consider *minimization* problems and *minimax* problems of the following forms.
 
 $$
-\min_{x\in\mathcal{X}}\ \left[f(x)\triangleq \max_{y\in\mathcal{Y}}\ g(x,y)\right].
+\min_{x\in\mathcal{X}}\ f(x),
 $$
+
+$$
+\min_{x\in\mathcal{X}}\ \left[f(x)\triangleq \max_{y\in\mathcal{Y}}\ g(x,y)\right],
+$$
+where $\mathcal{X}$ is a convex set. 
 
 Based on the **stochasticity**, we divide our discussions into three cases:
 
-- Deterministic (General) Optimization,
+- Deterministic (General) Optimization
 
 $$
 \min_{x\in\mathcal{X}}\ f(x).
@@ -104,29 +114,33 @@ $$
 \min_{x\in\mathcal{X}}\ f(x)\triangleq\mathbb{E}_{\xi\sim\mathcal{D}}[f(x;\xi)].
 $$
 
-A subtle while important difference between finite-sum and stochastic optimization problems lies in the ability to access to the overall objective function $f(x)$, i.e., stochastic optimization usually does not have access to $f(x)$ while the finite-sum problem has. As a result, algorithms that require access to $f(x)$, such as the classical stochastic variance reduced gradient (SVRG) algorithm<d-cite key="johnson2013accelerating"></d-cite>, are not directly applicable in the purely stochastic setting.
+Finite-sum and stochastic optimization problems might appear similar, particularly when $n$ is large. Indeed, if $f_i(x) = f(x; \xi_i)$ where $\xi_i$ are independently and identically distributed across all $i$, the finite-sum problem can be seen as an empirical counterpart of the stochastic optimization. In such scenarios, finite-sum problems typically arise in statistics and learning as empirical risk minimization, corresponding to an offline setting, i.e., one has access to a dataset of $n$ sample points. In contrast, stochastic optimization often pertains to an online setting, i.e., one could query an oracle to obtain samples from the population distribution $\mathcal{D}$. The primary distinction between methods used to solve these optimization challenges centers on the accessibility to the total objective function $f(x)$. Specifically, in stochastic optimization, access to $f(x)$ is typically unavailable, unlike in finite-sum problems. Consequently, algorithms that rely on access to $f(x)$, such as the classical stochastic variance reduced gradient (SVRG) algorithm <d-cite key="johnson2013accelerating"></d-cite>, cannot be directly applied in purely stochastic settings.
 
-Based on the **convexity** of the objective, we will divide our discussions into various cases, including strongly-convex (SC), convex (C) and nonconvex cases (NC).
-For minimax problems, based on convexity of $g(\cdot,y)$ for a given $y$ and the concavity of $g(x,\cdot)$ for a given $x$, we review results for strongly convex strongly concave (SC-SC), convex-concave (C-C),nonconvex strongly concave (NC-SC) and other combinations. 
+Based on the **convexity** of the objective $f(x)$, we categorize our discussions on minimization problem into strongly convex (SC), convex (C), and nonconvex (NC) cases. For minimax problems, depending on the convexity of $g(\cdot,y)$ for a given $y$ and the concavity of $g(x,\cdot)$ for a given $x$, we review results for combinations such as strongly convex-strongly concave (SC-SC), convex-concave (C-C), nonconvex-strongly concave (NC-SC), and other variations.
+
 
 ### Literature
 
-This notes aims to review state-of-the-art (SOTA) first-order optimization algorithms convergence results. In fact, there are several great works for comprehensive review of optimization algorithm from different perspectives. Besides many well-known textbook and course materials like the one from Stephen Boyd<d-cite key="boyd2024text"></d-cite><d-cite key="boyd2024video"></d-cite>, maybe one of the most impressive works is the blog post by Ruder<d-cite key="ruder2016overview"></d-cite>, which received more than 10k citations according to Google Scholar. This post reviewed algorithm design of gradient descent (GD), stochastic gradient descent (SGD) and their variants, especially those commonly used in machine learning community like AdaGrad<d-cite key="duchi2011adaptive"></d-cite> and Adam<d-cite key="kingma2014adam"></d-cite>. Several monographs reviewed optimization algorithms in various settings, e.g., <d-cite key="bubeck2015convex"></d-cite>, <d-cite key="bottou2018optimization"></d-cite>, <d-cite key="sun2019survey"></d-cite>, <d-cite key="dvurechensky2021first"></d-cite> and <d-cite key="garrigos2023handbook"></d-cite>; the page by Ju Sun<d-cite key="sun2021list"></d-cite> was a popular repository tracking research effort on achieving global optimality for nonconvex optimization<d-footnote>Latest update: Dec 11 2021.</d-footnote>. The review by Ruoyu Sun<d-cite key="sun2019optimization"></d-cite> further specified the survey of optimization algorithm study in the context of deep learning. A recent survey by Danilova et al.,<d-cite key="danilova2022recent"></d-cite> revisited algorithm design and complexity analysis specifically in nonconvex optimization, which to some extent is the closest one to our blog post. Our blog aims to serve as an easy accessible tool for optimizers to check the SOTA theoretical convergence rate from both upper and lower bounds perspectives in an easier manner.
+This blog aims to summarize complexity results of state-of-the-art (SOTA) first-order optimization algorithms. In fact, there are several great works for comprehensive review of optimization algorithm from different perspectives. Besides many well-known textbook and course materials like the one from Stephen Boyd<d-cite key="boyd2024text"></d-cite><d-cite key="boyd2024video"></d-cite>, maybe one of the most impressive works is the blog post by Ruder<d-cite key="ruder2016overview"></d-cite>, which received more than 10k citations according to Google Scholar. The post reviewed algorithm design of gradient descent (GD), stochastic gradient descent (SGD) and their variants, especially those commonly used in machine learning community like AdaGrad<d-cite key="duchi2011adaptive"></d-cite> and Adam<d-cite key="kingma2014adam"></d-cite>. Several monographs reviewed optimization algorithms in various settings, e.g., <d-cite key="bubeck2015convex"></d-cite>, <d-cite key="bottou2018optimization"></d-cite>, <d-cite key="sun2019survey"></d-cite>, <d-cite key="dvurechensky2021first"></d-cite> and <d-cite key="garrigos2023handbook"></d-cite>; the page by Ju Sun<d-cite key="sun2021list"></d-cite> was a popular repository tracking research effort on achieving global optimality for nonconvex optimization<d-footnote>Latest update: Dec 11 2021.</d-footnote>. The review by Ruoyu Sun<d-cite key="sun2019optimization"></d-cite> further specified the survey of optimization algorithm study in the context of deep learning. A recent survey by Danilova et al.,<d-cite key="danilova2022recent"></d-cite> revisited algorithm design and complexity analysis for nonconvex optimization. To some extent, it is the closest one to our blog post. Our blog aims to serve as an easy accessible tool for optimizers to check the SOTA theoretical convergence rate from both upper and lower bounds perspectives.
+
 
 ---
 
 ## Framework: Oracle Complexity Model
 
-We formally recall the definition of complexity. In particular, we stick to the classical **oracle complexity model**<d-cite key='nemirovskij1983problem'></d-cite>.
-As the figure below suggest, generally this framework consists of the following components:
-- *Fucntion class* $\mathcal{F}$, e.g., convex Lipschitz continuous function, and (nonconvex) Lipschitz smooth function.
-- *Oracle class* $\mathbb{O}$, e.g., zeroth-order oracle (function value), first-order oracle (function gradient or subdifferential).
-- *Algorithm class* $\mathcal{A}$, e.g., a common algorithm class studied in optimization literature is the *linear-span algorithm* interacting with an oracle $\mathbb{O}$, which encounters many well-known algorithms. This algorithm class is characterized as that 
-if we let $(x^t)_t$ be the sequence history queries generated by the algorithm, for the next iterate, we have 
+Intuitively, upper complexity bounds means how many sample/iteration it takes for an algorithm to reach a certain accuracy, such as $epsilon$-optimality. Thus upper complexity bound are algorithm-specific. Lower complexity bounds characterizes how many sample/iteration it at least take for the best algorithm (within some algorithm class) to reach a certain accuracy for the worst-case function within some function class. Thus lower complexity bounds are usually for a class of algorithms and function class. Since computing gradient or generating samples requires some efforts, in optimization, we sometimes use oracle to represent these efforts.
+
+To formally characterize complexity, we use the classical **oracle complexity model** framework<d-cite key='nemirovskij1983problem'></d-cite>. Feel free to jump directly to the summary table as these are just for proper descriptions of lower bounds.
+
+The oracle complexity model consists of the following components:
+- *Fucntion class* $\mathcal{F}$, e.g., convex Lipschitz continuous function class, and (nonconvex) Lipschitz smooth function class.
+- *Oracle class* $\mathbb{O}$, for any query point $x$, it requires some information $\mathbb{O}(x)$ about the function, e.g., zeroth-order oracle returns function value and first-order oracle returns function gradient or subdifferential.
+- *Algorithm class* $\mathcal{A}$, e.g., a common algorithm class studied in optimization literature is the *linear-span algorithm*, which covers various gradient-based methods. The algorithm interacting with an oracle $\mathbb{O}$ to decide the next query point. Linear-span algorithm says that the next query point is within a linear combination of all past information:
 
 $$
 x^{t+1}\in\mathrm{Span}\left\{x^0,\cdots,x^t;\mathbb{O}(f,x^0),\cdots,\mathbb{O}(f,x^t)\right\}.
 $$
+Recall gradient descent $x^{t+1} = x^t - \alpha \nabla f(x^t)$. Obviously, $x^{t+1}$ is within the linear span of $x^t$ and $\nabla f(x^t)$.
 
 - *Complexity measure* $\mathcal{M}$, e.g., 
   - Optimality gap $f(x)-f(x^\star)$ where $x^\star$ is the global minimum.
